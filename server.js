@@ -9,6 +9,9 @@ import translate from 'google-translate-api-x';
 import path from "path";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import winston from "winston";
+import fs from "fs-extra"
+import { join } from "path";
 
 const app = express();
 app.use(cors());
@@ -28,7 +31,48 @@ app.use((req, res, next) => {
     next();
 });
 
+const logDir = 'logs';
+fs.ensureDirSync(logDir);
 
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({
+      filename: join(logDir, 'app.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 1, // Keep only one file
+      tailable: true,
+      options: { flags: 'w' } // Overwrite file on restart
+    })
+  ]
+});
+
+// Streamlined logging middleware
+app.use((req, res, next) => {
+  logger.info({
+    message: "Request",
+    method: req.method,
+    url: req.url,
+  });
+
+  const originalSend = res.send;
+  res.send = function (body) {
+    logger.info({
+      message: "Response",
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+    });
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
 
 // Enhanced translation endpoint using google-translate-api-x
 app.post("/translate", async (req, res) => {
