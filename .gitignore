@@ -1,0 +1,30 @@
+# Dependencies
+/node_modules
+/client/node_modules
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+/dist
+/client/dist
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# IDE specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS specific
+.DS_Store
+Thumbs.db
